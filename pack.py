@@ -62,7 +62,7 @@ def pack_plugin():
                 zipf.write(file_name)
                 print(f"已添加: {file_name}")
 
-        print(f"\n✅ 打包成功!")
+        print("\n✅ 打包成功!")
         print(f"输出文件: {output_file}")
         print(f"文件大小: {output_file.stat().st_size} 字节")
         return True
