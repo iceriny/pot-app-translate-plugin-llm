@@ -1,156 +1,127 @@
-# AI 翻译插件 (Pot App)
+# Pot AI 翻译插件
 
-一个支持多种 AI 提供商的高质量翻译插件，为 [Pot App](https://github.com/pot-app/pot-app) 提供强大的 AI 翻译能力。
+[English](./README.en.md) | 中文
 
-## ✨ 特色功能
+一款为 [pot](https://github.com/pot-app/pot-app) 设计的翻译插件，利用大型语言模型（LLM）提供高质量、多策略的翻译服务。
 
-### 🚀 多提供商支持
+## ✨ 功能特性
 
--   **DeepSeek**: 支持官方所有模型，如 `deepseek-chat` 和 `deepseek-reasoner`
--   **SiliconFlow**: 支持平台所有模型，如 `deepseek-ai/DeepSeek-V3.1`、`Qwen/Qwen2.5-72B-Instruct` 等，配备 JSON 结构化输出
+-   **多服务商支持**：轻松在 DeepSeek、SiliconFlow 等多种 LLM 服务商之间切换。
+-   **灵活的翻译策略**：通过简单的引导符号，实现不仅仅是翻译的功能。
+    -   `默认`: 高质量的常规翻译。
+    -   `>t`: 标准翻译，风格与原文保持一致。
+    -   `$p`: **翻译并润色**，使译文更流畅、地道。
+    -   `$r`: **翻译并提供音标**，返回译文的国际音标（IPA）。
+    -   `$cf` / `$cm`: **提供不同风格的口语化翻译**，可选择女性化或男性化口吻。
+-   **高度可配置**：支持自定义模型名称，以适应不同服务商的各种模型。
+-   **国际化**：插件界面、帮助文本和错误信息均支持中英双语。
+-   **内置帮助**：输入 `?` 即可获取所有可用指令的帮助信息。
 
-### 🎯 智能架构
+## 🚀 安装
 
--   **策略模式设计**: 根据配置自动切换不同的 AI 提供商
--   **结构化输出**: SiliconFlow 提供商支持 JSON 模式，确保翻译结果更加准确
--   **统一接口**: 所有提供商使用相同的配置参数和调用方式
--   **智能验证**: 完善的输入验证和错误处理机制
--   **自定义模型**: 支持任意模型名称，满足个性化需求
+1. 前往 [Releases](https://github.com/iceriny/pot-app-translate-plugin-llm/releases) 页面。
+2. 下载最新的 `.potext` 后缀插件文件。
+3. 打开 pot 应用，进入 `设置` -> `插件` -> `安装插件`，选择下载的 `.potext` 文件即可。
 
-### 🌍 广泛语言支持
+## ⚙️ 配置
 
-支持 20+ 种语言的互译，包括：
+安装插件后，请在 pot 的插件设置界面中进行配置：
 
--   中文（简体/繁体）、英语、日语、韩语
--   法语、西班牙语、俄语、德语、意大利语
--   阿拉伯语、印地语、泰语、越南语等
+| 选项                        | 描述                                     | 示例                        |
+| --------------------------- | ---------------------------------------- | --------------------------- |
+| `提供商/Provider`           | 选择您想要使用的 AI 服务商。             | `deepseek` 或 `siliconflow` |
+| `模型名称/Model Name`       | 填写服务商提供的模型 ID。                | `deepseek-chat`             |
+| `API密钥/API Key`           | 您的服务商 API 密钥。                    | `sk-xxxxxxxx`               |
+| `显示语言/Display Language` | 插件的帮助文本和错误提示将以此语言显示。 | `zh_cn` 或 `en`             |
 
-## 📋 前置要求
+## 📖 使用方法
 
--   [Pot App](https://github.com/pot-app/pot-app) - 主应用程序
--   API 密钥（根据选择的提供商）:
-    -   [DeepSeek API](https://platform.deepseek.com/usage)
-    -   [SiliconFlow API](https://cloud.siliconflow.cn/)
+在 pot 的输入框中，通过添加不同的前缀来激活相应功能。
 
-## 🛠️ 安装方法
+#### 1. 默认翻译
 
-### 方式一：使用预编译插件
-
-1. 下载最新的 `plugin.com.iceriny.llm.potext` 文件
-2. 在 Pot App 中：
-    - 打开「偏好设置」→「服务设置」
-    - 点击「翻译 - 添加外部插件」
-    - 选择下载的 `.potext` 文件进行安装
-
-### 方式二：从源码构建
-
-```bash
-# 克隆仓库
-git clone https://github.com/iceriny/pot-app-translate-plugin-llm.git
-cd pot-app-translate-plugin-llm
-
-# 打包插件
-python pack.py
-
-# 安装生成的 dist/plugin.com.iceriny.llm.potext 文件
-```
-
-## ⚙️ 配置说明
-
-安装插件后，在设置中配置以下参数：
-
-### 1. 选择提供商
-
--   `deepseek`: 使用 DeepSeek 官方 API
--   `siliconflow`: 使用硅基流动平台 API
-
-### 2. 输入模型名称
-
-支持任意模型名称，常用选项包括：
-
--   **deepseek-chat**: 通用对话模型，响应速度快（DeepSeek 官方）
--   **deepseek-reasoner**: 推理增强模型，逻辑性更强（DeepSeek 官方）
--   **deepseek-ai/DeepSeek-V3.1**: 高性能模型（SiliconFlow 平台）
--   **Qwen/Qwen2.5-72B-Instruct**: 通义千问模型（SiliconFlow 平台）
--   **meta-llama/Llama-3.1-70B-Instruct**: Llama 模型（SiliconFlow 平台）
-
-### 3. 输入 API 密钥
-
-根据选择的提供商，输入对应的 API 密钥
-
-## 🚀 使用方法
-
-1. 完成配置后，在 Pot App 的翻译引擎列表中选择「AI 翻译」
-2. 选择源语言和目标语言
-3. 输入要翻译的文本，即可获得高质量的翻译结果
-
-## 🏗️ 技术架构
-
-### 策略模式设计
-
-```javascript
-// 提供商策略映射
-const providerStrategies = {
-    deepseek: handleDeepSeek,
-    siliconflow: handleSiliconFlow,
-};
-
-// 根据配置动态选择提供商
-const providerHandler = providerStrategies[provider];
-return await providerHandler(text, from, to, config, fetch);
-```
-
-### JSON 结构化输出（SiliconFlow）
-
--   使用 `response_format: { type: "json_object" }` 确保结构化响应
--   自动解析 JSON 并提取翻译内容
--   提供错误回退机制，确保稳定性
-
-## 📦 项目结构
+直接输入您想翻译的文本。
 
 ```
-pot-app-translate-plugin-llm/
-├── main.js          # 插件核心逻辑
-├── info.json        # 插件配置信息
-├── icon.svg         # 插件图标
-├── pack.py          # 打包脚本
-├── .gitignore       # Git忽略文件
-└── README.md        # 项目文档
+Hello World
 ```
 
-## 🔧 开发相关
-
-### 添加新提供商
-
-1. 实现提供商处理函数
-2. 在 `providerStrategies` 中注册
-3. 在 `info.json` 中添加配置选项
-
-### 打包插件
-
-```bash
-python pack.py
-```
-
-将生成 `dist/plugin.com.iceriny.llm.potext` 文件
-
-## ⚠️ 注意事项
-
--   请妥善保管 API 密钥，避免泄露
--   翻译服务需要网络连接
--   不同提供商的计费方式可能不同，请注意用量控制
--   SiliconFlow 提供商支持更精确的 JSON 格式输出
-
-## 📄 许可证
-
-本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request 来改进这个项目！
+> 你好，世界
 
 ---
 
-**支持的提供商**: DeepSeek • SiliconFlow
-**支持的语言**: 20+ 种主流语言
-**架构特色**: 策略模式 • JSON 结构化输出 • 统一接口
+#### 2. 翻译并润色 (`$p`)
+
+使用 `$p ` 前缀，插件将返回一个经过润色的、更自然流畅的译文。
+
+**输入:**
+
+```
+$p The company's innovative strategy led to a paradigm shift in the market.
+```
+
+**输出:**
+
+> 这家公司的创新策略引起了市场的范式转移。
+
+_(注：`$p` 策略只会返回润色后的版本)_
+
+---
+
+#### 3. 翻译并提供音标 (`$r`)
+
+使用 `$r ` 前缀，插件将返回译文及其对应的国际音标 (IPA)。
+
+**输入:**
+
+```
+$r Hello
+```
+
+**输出:**
+
+```
+翻译:
+你好
+
+音标 (IPA):
+nǐ hǎo
+```
+
+---
+
+#### 4. 提供口语化翻译 (`$cf` / `$cm`)
+
+使用 `$cf ` (女性化) 或 `$cm ` (男性化) 前缀，插件将提供标准翻译和一个特定风格的口语化版本。
+
+**输入:**
+
+```
+$cf That's great!
+```
+
+**输出:**
+
+```
+标准翻译:
+太好了！
+
+口语化表达:
+那可真棒呀！
+```
+
+---
+
+#### 5. 获取帮助 (`?`)
+
+在输入框中输入 `?` 并回车，即可查看所有可用指令的帮助信息。
+
+## 🛠️ 开发
+
+1. 克隆本仓库。
+2. 运行 `python pack.py` 来打包插件。
+3. 生成的 `.potext` 文件位于 `dist` 目录下。
+
+## 📄 许可
+
+[MIT](./LICENSE)
