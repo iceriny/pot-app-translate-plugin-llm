@@ -1,73 +1,73 @@
 {
-    "id": "plugin.com.iceriny.llm",
-    "plugin_type": "translate",
-    "icon": "icon.svg",
-    "display": "AI翻译",
-    "homepage": "https://github.com/iceriny/pot-app-translate-plugin-llm",
-    "needs": [
-        {
-            "key": "provider",
-            "display": "提供商/Provider",
-            "type": "select",
-            "options": {
-                "deepseek": "deepseek",
-                "siliconflow": "siliconflow"
-            },
-            "default": "deepseek"
-        },
-        {
-            "key": "model",
-            "display": "模型名称/Model Name",
-            "type": "input",
-            "default": "deepseek-chat"
-        },
-        {
-            "key": "apiKey",
-            "display": "API密钥/API Key",
-            "type": "input"
-        },
-        {
-            "key": "lang",
-            "display": "显示语言/Display Language",
-            "type": "select",
-            "options": {
-                "zh_cn": "zh_cn",
-                "en": "en"
-            },
-            "default": "zh_cn"
-        },
-        {
-            "key": "version",
-            "display": "版本/Version: 2.0.0 (仅作标识, 填写无用/For identification only)",
-            "type": "input"
-        }
-    ],
-    "language": {
-        "auto": "auto",
-        "zh_cn": "zh",
-        "zh_tw": "zh_HANT",
-        "en": "en",
-        "ja": "ja",
-        "ko": "ko",
-        "fr": "fr",
-        "es": "es",
-        "ru": "ru",
-        "de": "de",
-        "it": "it",
-        "tr": "tr",
-        "pt_pt": "pt",
-        "pt_br": "pt",
-        "vi": "vi",
-        "id": "id",
-        "th": "th",
-        "ms": "ms",
-        "ar": "ar",
-        "hi": "hi",
-        "mn_cy": "mn",
-        "mn_mo": "mn",
-        "km": "km",
-        "nb_no": "no",
-        "nn_no": "no",
-        "fa": "fa"
+  "id": "plugin.com.iceriny.llm",
+  "plugin_type": "translate",
+  "icon": "icon.svg",
+  "display": "AI翻译",
+  "homepage": "https://github.com/iceriny/pot-app-translate-plugin-llm",
+  "needs": [
+    {
+      "key": "provider",
+      "display": "提供商/Provider",
+      "type": "select",
+      "options": {
+        "deepseek": "deepseek",
+        "siliconflow": "siliconflow"
+      },
+      "default": "deepseek"
+    },
+    {
+      "key": "model",
+      "display": "模型名称/Model Name",
+      "type": "input",
+      "default": "deepseek-chat"
+    },
+    {
+      "key": "apiKey",
+      "display": "API密钥/API Key",
+      "type": "input"
+    },
+    {
+      "key": "lang",
+      "display": "显示语言/Display Language",
+      "type": "select",
+      "options": {
+        "zh_cn": "zh_cn",
+        "en": "en"
+      },
+      "default": "zh_cn"
+    },
+    {
+      "key": "version",
+      "display": "版本/Version: 2.0.2 (仅作标识, 填写无用/For identification only)",
+      "type": "input"
     }
+  ],
+  "language": {
+    "auto": "auto",
+    "zh_cn": "zh",
+    "zh_tw": "zh_HANT",
+    "en": "en",
+    "ja": "ja",
+    "ko": "ko",
+    "fr": "fr",
+    "es": "es",
+    "ru": "ru",
+    "de": "de",
+    "it": "it",
+    "tr": "tr",
+    "pt_pt": "pt",
+    "pt_br": "pt",
+    "vi": "vi",
+    "id": "id",
+    "th": "th",
+    "ms": "ms",
+    "ar": "ar",
+    "hi": "hi",
+    "mn_cy": "mn",
+    "mn_mo": "mn",
+    "km": "km",
+    "nb_no": "no",
+    "nn_no": "no",
+    "fa": "fa"
+  }
 }
