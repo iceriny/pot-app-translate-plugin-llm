@@ -4,25 +4,32 @@ const I18n = {
     this.strings = {
       zh_cn: {
         help_text: `LLM 翻译插件帮助:
-- 默认: 直接输入文本进行翻译。
-- >t [文本]: 执行标准翻译, 也是默认策略。
-- $p [文本]: 翻译并润色，返回更优美的结果。
-- $r [文本]: 不翻译，仅返回原文的音标 (IPA)。
-- $r> [文本]: 翻译并返回译文的音标 (IPA)。
-- $r< [文本]: 翻译并返回原文的音标 (IPA)。
-- $r<> [文本]: 翻译并返回原文与译文的音标 (IPA)。
-- $cf [文本]: 提供女性化的口语翻译。
-- $cm [文本]: 提供男性化的口语翻译。
-- $q [问题]: 这将作为LLM的普通的普通的问答形式, 而非翻译。
-- ?: 显示此帮助信息。`,
+  直接输入文本即可翻译（默认模式）
+
+  翻译命令:
+  $t  [文本]   标准翻译（同默认模式）
+  $p  [文本]   翻译并润色，提供直译与润色两个版本
+  $f  [文本]   女性化口语风格翻译
+  $m  [文本]   男性化口语风格翻译
+
+  发音命令（自动适配语言: 中文→拼音 日语→罗马字 韩语→罗马字转写 其他→IPA）:
+  $r  [文本]   仅返回原文的发音标注（不翻译）
+  $r> [文本]   翻译并返回译文的发音标注
+  $r< [文本]   翻译并返回原文的发音标注
+  $r<>[文本]   翻译并返回原文与译文的发音标注
+
+  其他:
+  $q  [问题]   以问答模式与 LLM 对话（非翻译）
+  ?            显示此帮助信息`,
         polished_version_not_found: "润色版本未找到。",
         standard_translation: "标准翻译",
-        colloquial_expression: "口语化表达",
+        polished_translation: "润色版",
+        colloquial_expression: "口语版",
         translation: "翻译",
-        ipa: "音标 (IPA)",
+        pronunciation: "发音",
         source_text: "原文",
-        source_ipa: "原文音标 (IPA)",
-        target_ipa: "译文音标 (IPA)",
+        source_pronunciation: "原文发音",
+        target_pronunciation: "译文发音",
         api_response_format_error: "API响应格式异常",
         json_parse_error: "JSON解析失败，返回原始内容",
         translate_text_empty: "翻译文本不能为空",
@@ -36,25 +43,32 @@ const I18n = {
       },
       en: {
         help_text: `LLM Translate Plugin Help:
-- Default: Enter text directly to translate.
-- >t [text]: Perform standard translation.
-- $p [text]: Translate and polish for a more elegant result.
-- $r [text]: Return only the IPA for the original text (no translation).
-- $r> [text]: Translate and return the IPA for the translated text.
-- $r< [text]: Translate and return the IPA for the original text.
-- $r<> [text]: Translate and return IPAs for both the original and translated text.
-- $cf [text]: Provide a colloquial, feminine-style translation.
-- $cm [text]: Provide a colloquial, masculine-style translation.
-- $q [question]: This will be a regular question for the LLM, not a translation.
-- ?: Display this help message.`,
+  Enter text directly to translate (default mode)
+
+  Translation:
+  $t  [text]   Standard translation (same as default)
+  $p  [text]   Translate & polish, literal + polished versions
+  $f  [text]   Feminine colloquial style translation
+  $m  [text]   Masculine colloquial style translation
+
+  Pronunciation (auto-adapts: Chinese→Pinyin, Japanese→Romaji, Korean→RR, Others→IPA):
+  $r  [text]   Pronunciation of source text only (no translation)
+  $r> [text]   Translate + pronunciation of translated text
+  $r< [text]   Translate + pronunciation of source text
+  $r<>[text]   Translate + pronunciation of both
+
+  Other:
+  $q  [question]  Chat with LLM (non-translation)
+  ?               Show this help`,
         polished_version_not_found: "Polished version not found.",
         standard_translation: "Standard Translation",
-        colloquial_expression: "Colloquial Expression",
+        polished_translation: "Polished Version",
+        colloquial_expression: "Colloquial Version",
         translation: "Translation",
-        ipa: "IPA",
-        source_text: "Source Text",
-        source_ipa: "Source IPA",
-        target_ipa: "Translated IPA",
+        pronunciation: "Pronunciation",
+        source_text: "Source",
+        source_pronunciation: "Source Pronunciation",
+        target_pronunciation: "Translation Pronunciation",
         api_response_format_error: "API response format error",
         json_parse_error: "JSON parsing failed, returning original content",
         translate_text_empty: "Translate text cannot be empty",
@@ -89,83 +103,178 @@ class LLMTranslator {
     this.i18n = Object.create(I18n);
     this.i18n.init(this.config.lang);
 
-    // 策略定义：引导符号 -> 系统提示词
+    // ── 语言名称映射 ──
+    this._langNames = {
+      zh_cn: "Simplified Chinese",
+      zh_tw: "Traditional Chinese",
+      yue: "Cantonese",
+      en: "English",
+      ja: "Japanese",
+      ko: "Korean",
+      fr: "French",
+      de: "German",
+      es: "Spanish",
+      pt_pt: "Portuguese",
+      pt_br: "Brazilian Portuguese",
+      ru: "Russian",
+      ar: "Arabic",
+      it: "Italian",
+      th: "Thai",
+      vi: "Vietnamese",
+      id: "Indonesian",
+      ms: "Malay",
+      hi: "Hindi",
+      tr: "Turkish",
+      nl: "Dutch",
+      pl: "Polish",
+      uk: "Ukrainian",
+      sv: "Swedish",
+      da: "Danish",
+      no: "Norwegian",
+      fi: "Finnish",
+      cs: "Czech",
+      el: "Greek",
+      hu: "Hungarian",
+      ro: "Romanian",
+      bg: "Bulgarian",
+      he: "Hebrew",
+      fa: "Persian",
+    };
+
+    // ── 语言 → 发音标注系统映射 ──
+    this._phoneticSystems = {
+      zh_cn: "Pinyin",
+      zh_tw: "Pinyin",
+      yue: "Jyutping",
+      ja: "Romaji",
+      ko: "Revised Romanization of Korean",
+      th: "RTGS romanization",
+      hi: "IAST transliteration",
+      vi: "Vietnamese IPA with tone marks",
+    };
+
+    // ── 策略定义 ──
+    const defaultPrompt =
+      "You are a professional translator. Produce an accurate, fluent, and natural translation that faithfully preserves the tone, style, register, and intent of the source text. Output ONLY the translated text with no explanation or extra formatting.";
+
     this.strategies = {
-      // 默认策略：专注于质量和风格匹配
-      default:
-        "You are a master translator. Your goal is to produce a translation that is accurate, fluent, and natural. Faithfully convey the tone, style, and intent of the original text. If the original is formal, the translation should be formal. If it's colloquial, the translation should be colloquial. Avoid any awkward, machine-like phrasing. Your entire output must be only the translated text.",
-      ">t": "You are a master translator. Your goal is to produce a translation that is accurate, fluent, and natural. Faithfully convey the tone, style, and intent of the original text. If the original is formal, the translation should be formal. If it's colloquial, the translation should be colloquial. Avoid any awkward, machine-like phrasing. Your entire output must be only the translated text.",
+      default: defaultPrompt,
+      $t: defaultPrompt,
 
-      // $p: 翻译并润色
+      // $p: 翻译并润色，返回直译 + 意译
       $p: {
-        prompt: `You are an expert translator and copy-editor. Your task is to provide two versions of the translation in a single JSON object.
-1.  **literal**: A standard, faithful, and accurate translation of the original text.
-2.  **free**: A polished and refined version of the first translation. This version should be more idiomatic, natural, and engaging for a native speaker, improving flow and readability.
-
-Your response MUST be a single, valid JSON object in the format: \`{"literal": "...", "free": "..."}\`. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        prompt:
+          'You are an expert translator and editor. Provide two translation versions as JSON:\n1. "literal": A faithful, accurate translation.\n2. "free": A polished, idiomatic version that reads naturally and elegantly for native speakers while preserving the original meaning.\n\nRespond with ONLY valid JSON: {"literal": "...", "free": "..."}',
         responseType: "json",
       },
 
-      // $r 系列: 音标策略
+      // $r 系列: 发音标注策略（动态适配语言）
       $r: {
-        prompt: `You are a professional linguist. Provide the International Phonetic Alphabet (IPA) transcription for the text exactly as written. Do NOT translate, summarize, or paraphrase the content. Respond with a single, valid JSON object using the format: {"original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown outside this JSON object.`,
+        prompt: (fromLang) => {
+          const notation = this._getPhoneticNotation(fromLang);
+          if (!notation) {
+            return 'You are a professional linguist. Detect the language of the given text and provide its phonetic transcription using the most appropriate notation system for that language (e.g., Pinyin for Chinese, Romaji for Japanese, IPA for English and European languages). Do NOT translate. Respond with ONLY valid JSON: {"text": "...", "phonetic": "..."}';
+          }
+          return `You are a professional linguist. Provide the ${notation} phonetic transcription for the given text. Do NOT translate or paraphrase. Respond with ONLY valid JSON: {"text": "...", "phonetic": "..."}`;
+        },
         responseType: "json",
         buildUserPrompt: (content) =>
-          `Provide only the IPA transcription for the following text without translating or paraphrasing it:\n${content}`,
+          `Provide phonetic transcription for:\n${content}`,
       },
       "$r>": {
-        prompt: `You are a linguist and translator. Translate the text first, then provide the International Phonetic Alphabet (IPA) transcription for the translated text. Respond with a single, valid JSON object using the format: {"translation": "...", "translationIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        prompt: (fromLang, toLang) => {
+          const notation = this._getPhoneticNotation(toLang) || "IPA";
+          const langName = this._getLangName(toLang) || toLang;
+          return `You are a linguist and translator. Translate the text into ${langName}, then provide the ${notation} phonetic transcription for the TRANSLATED text. Respond with ONLY valid JSON: {"translation": "...", "phonetic": "..."}`;
+        },
         responseType: "json",
       },
       "$r<": {
-        prompt: `You are a linguist and translator. Translate the text, but provide the International Phonetic Alphabet (IPA) transcription for the original text. Respond with a single, valid JSON object using the format: {"translation": "...", "original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        prompt: (fromLang, toLang) => {
+          const langName = this._getLangName(toLang) || toLang;
+          const notation = this._getPhoneticNotation(fromLang);
+          if (!notation) {
+            return `You are a linguist and translator. Translate the text into ${langName}. Detect the source language and provide phonetic transcription of the ORIGINAL text using the appropriate notation system for that language. Respond with ONLY valid JSON: {"translation": "...", "phonetic": "..."}`;
+          }
+          return `You are a linguist and translator. Translate the text into ${langName}, and provide the ${notation} phonetic transcription for the ORIGINAL text. Respond with ONLY valid JSON: {"translation": "...", "phonetic": "..."}`;
+        },
         responseType: "json",
       },
       "$r<>": {
-        prompt: `You are a linguist and translator. Translate the text and provide IPA transcriptions for both the original text and the translated text. Respond with a single, valid JSON object using the format: {"translation": "...", "translationIPA": "...", "original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        prompt: (fromLang, toLang) => {
+          const langName = this._getLangName(toLang) || toLang;
+          const tgtNotation = this._getPhoneticNotation(toLang) || "IPA";
+          const srcNotation = this._getPhoneticNotation(fromLang);
+          if (!srcNotation) {
+            return `You are a linguist and translator. Translate the text into ${langName}. Provide two phonetic transcriptions: detect the source language and use its standard notation for the original text; use ${tgtNotation} for the translated text. Respond with ONLY valid JSON: {"translation": "...", "sourcePhonetic": "...", "targetPhonetic": "..."}`;
+          }
+          return `You are a linguist and translator. Translate the text into ${langName}. Provide phonetic transcriptions: ${srcNotation} for the original text and ${tgtNotation} for the translated text. Respond with ONLY valid JSON: {"translation": "...", "sourcePhonetic": "...", "targetPhonetic": "..."}`;
+        },
         responseType: "json",
       },
 
-      // $cf: 翻译为标准版和女性化口语版
-      $cf: {
-        prompt: `You are a translator specializing in cultural and social nuance. Your task is to provide two versions of the translation in a single JSON object, reflecting different communication styles.
-1.  **literal**: A standard, neutral translation.
-2.  **free**: A colloquial version adapted to a typically **feminine** communication style. This version might be warmer, more expressive, or use softer language, depending on the context and the target language's culture.
-
-Your response MUST be a single, valid JSON object in the format: \`{"literal": "...", "free": "..."}\`. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+      // $f: 女性化口语风格
+      $f: {
+        prompt:
+          'You are a translator specializing in cultural nuance. Provide two versions as JSON:\n1. "literal": A standard, neutral translation.\n2. "free": A feminine colloquial version — warmer, expressive, using softer language appropriate to the target culture.\n\nRespond with ONLY valid JSON: {"literal": "...", "free": "..."}',
         responseType: "json",
       },
 
-      // $cm: 翻译为标准版和男性化口语版
-      $cm: {
-        prompt: `You are a translator specializing in cultural and social nuance. Your task is to provide two versions of the translation in a single JSON object, reflecting different communication styles.
-1.  **literal**: A standard, neutral translation.
-2.  **free**: A colloquial version adapted to a typically **masculine** communication style. This version might be more direct, concise, or assertive, depending on the context and the target language's culture.
-
-Your response MUST be a single, valid JSON object in the format: \`{"literal": "...", "free": "..."}\`. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+      // $m: 男性化口语风格
+      $m: {
+        prompt:
+          'You are a translator specializing in cultural nuance. Provide two versions as JSON:\n1. "literal": A standard, neutral translation.\n2. "free": A masculine colloquial version — direct, concise, assertive, appropriate to the target culture.\n\nRespond with ONLY valid JSON: {"literal": "...", "free": "..."}',
         responseType: "json",
       },
 
-      // $q: 普通问答，无额外系统提示词
+      // $q: 普通问答
       $q: {
         passthrough: true,
       },
     };
 
-    // 服务商配置
+    // 向后兼容旧命令
+    this.strategies[">t"] = this.strategies.$t;
+    this.strategies["$cf"] = this.strategies.$f;
+    this.strategies["$cm"] = this.strategies.$m;
+
+    // ── 服务商配置 ──
     this.providers = {
       deepseek: {
         url: "https://api.deepseek.com/chat/completions",
         defaultModel: "deepseek-chat",
-        responseFormat: "json_object", // 明确支持json模式
+        responseFormat: "json_object",
       },
       siliconflow: {
         url: "https://api.siliconflow.cn/v1/chat/completions",
         defaultModel: "deepseek-ai/DeepSeek-V3.1",
         responseFormat: "json_object",
       },
-      // 可以继续添加更多服务商
     };
+  }
+
+  // ── 辅助方法 ──
+
+  /**
+   * 获取语言的可读名称
+   * @param {string} code - 语言代码 (如 "zh_cn", "en", "ja")
+   * @returns {string|null}
+   */
+  _getLangName(code) {
+    if (!code || code === "auto") return null;
+    const key = code.toLowerCase().replace(/[-\s]/g, "_");
+    return this._langNames[key] || code;
+  }
+
+  /**
+   * 获取语言对应的发音标注系统
+   * @param {string} langCode - 语言代码
+   * @returns {string|null} 标注系统名称，未知语言返回 null
+   */
+  _getPhoneticNotation(langCode) {
+    if (!langCode || langCode === "auto") return null;
+    const key = langCode.toLowerCase().replace(/[-\s]/g, "_");
+    return this._phoneticSystems[key] || "IPA";
   }
 
   /**
@@ -174,11 +283,11 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
    * @returns {{strategyKey: string, content: string}}
    */
   _parseInput(text) {
-    const match = text.match(/^([>$][^\s]+)\s/);
+    const match = text.match(/^([>$][^\s]+)\s+/);
     if (match && this.strategies[match[1]]) {
       return {
         strategyKey: match[1],
-        content: text.substring(match[0].length),
+        content: text.substring(match[0].length).trim(),
       };
     }
     return { strategyKey: "default", content: text };
@@ -188,22 +297,31 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
    * 构建 API 请求的 messages
    * @param {string} strategyKey - 策略键
    * @param {string} content - 待处理文本
+   * @param {string} fromLang - 源语言
    * @param {string} toLang - 目标语言
    * @returns {Array<Object>}
    */
-  _buildMessages(strategyKey, content, toLang) {
+  _buildMessages(strategyKey, content, fromLang, toLang) {
     const strategy = this.strategies[strategyKey] || this.strategies.default;
     if (typeof strategy === "object" && strategy.passthrough) {
       return [{ role: "user", content }];
     }
 
-    const systemPrompt =
-      typeof strategy === "string" ? strategy : strategy.prompt;
+    let systemPrompt;
+    if (typeof strategy === "string") {
+      systemPrompt = strategy;
+    } else if (typeof strategy.prompt === "function") {
+      systemPrompt = strategy.prompt(fromLang, toLang);
+    } else {
+      systemPrompt = strategy.prompt;
+    }
+
+    const langName = this._getLangName(toLang) || toLang;
     const userPrompt =
       typeof strategy === "object" &&
       typeof strategy.buildUserPrompt === "function"
         ? strategy.buildUserPrompt(content, toLang)
-        : `Translate into ${toLang}:\n${content}`;
+        : `Translate the following text into ${langName}:\n${content}`;
 
     return [
       { role: "system", content: systemPrompt },
@@ -219,11 +337,7 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
    * @returns {string} 处理后的文本
    */
   _processResponse(responseData, responseFormat, strategyKey) {
-    if (
-      !responseData.choices ||
-      !responseData.choices[0] ||
-      !responseData.choices[0].message
-    ) {
+    if (!responseData.choices?.[0]?.message) {
       throw new Error(this.i18n.get("api_response_format_error"));
     }
 
@@ -231,54 +345,53 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
 
     if (responseFormat === "json_object") {
       try {
-        const jsonResponse = JSON.parse(messageContent);
+        const json = JSON.parse(messageContent);
         switch (strategyKey) {
           case "$p":
-            return (
-              jsonResponse.free || this.i18n.get("polished_version_not_found")
-            );
+            if (!json.free) return this.i18n.get("polished_version_not_found");
+            return `${this.i18n.get("standard_translation")}:\n${json.literal}\n\n${this.i18n.get("polished_translation")}:\n${json.free}`;
           case "$cf":
           case "$cm":
-            return `${this.i18n.get("standard_translation")}:\n${
-              jsonResponse.literal
-            }\n\n${this.i18n.get("colloquial_expression")}:\n${
-              jsonResponse.free
-            }`;
+          case "$f":
+          case "$m":
+            return `${this.i18n.get("standard_translation")}:\n${json.literal}\n\n${this.i18n.get("colloquial_expression")}:\n${json.free}`;
           case "$r":
           case "$r>":
           case "$r<":
           case "$r<>":
             return this._formatPhoneticsResponse(
               strategyKey,
-              jsonResponse,
+              json,
               messageContent
             );
           default:
-            return jsonResponse.translation || messageContent;
+            return json.translation || messageContent;
         }
       } catch (e) {
         console.warn(this.i18n.get("json_parse_error"), e.message);
-        return messageContent.replace(/^"|"$/g, ""); // 移除可能的引号
+        return messageContent.replace(/^"|"$/g, "");
       }
     }
 
     return messageContent;
   }
 
+  /**
+   * 格式化发音标注响应
+   */
   _formatPhoneticsResponse(strategyKey, payload, fallback) {
-    const safe = (value) =>
-      value === undefined || value === null ? "" : `${value}`;
+    const safe = (v) => (v == null ? "" : `${v}`);
     const sections = [];
 
     switch (strategyKey) {
       case "$r":
-        if (payload.original) {
+        if (payload.text) {
           sections.push(
-            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
+            `${this.i18n.get("source_text")}:\n${safe(payload.text)}`
           );
         }
         sections.push(
-          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+          `${this.i18n.get("pronunciation")}:\n${safe(payload.phonetic)}`
         );
         break;
       case "$r>":
@@ -286,20 +399,15 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
           `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
         );
         sections.push(
-          `${this.i18n.get("target_ipa")}:\n${safe(payload.translationIPA)}`
+          `${this.i18n.get("target_pronunciation")}:\n${safe(payload.phonetic)}`
         );
         break;
       case "$r<":
         sections.push(
           `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
         );
-        if (payload.original) {
-          sections.push(
-            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
-          );
-        }
         sections.push(
-          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+          `${this.i18n.get("source_pronunciation")}:\n${safe(payload.phonetic)}`
         );
         break;
       case "$r<>":
@@ -307,15 +415,10 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
           `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
         );
         sections.push(
-          `${this.i18n.get("target_ipa")}:\n${safe(payload.translationIPA)}`
+          `${this.i18n.get("target_pronunciation")}:\n${safe(payload.targetPhonetic)}`
         );
-        if (payload.original) {
-          sections.push(
-            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
-          );
-        }
         sections.push(
-          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+          `${this.i18n.get("source_pronunciation")}:\n${safe(payload.sourcePhonetic)}`
         );
         break;
       default:
@@ -356,7 +459,7 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
 
     // 4. 策略选择 -> 构建请求体
     const strategy = this.strategies[strategyKey] || this.strategies.default;
-    const messages = this._buildMessages(strategyKey, content, to);
+    const messages = this._buildMessages(strategyKey, content, from, to);
 
     // 默认返回 text, 仅当策略明确要求时才使用 json
     const responseFormat =
