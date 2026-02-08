@@ -6,16 +6,17 @@ A translation plugin for [pot](https://github.com/pot-app/pot-app), leveraging L
 
 ## ✨ Features
 
--   **Multi-Provider Support**: Easily switch between various LLM providers like DeepSeek, SiliconFlow, etc.
--   **Flexible Translation Strategies**: Achieve more than just translation with simple prefix commands.
-    -   `Default`: High-quality regular translation.
-    -   `>t`: Standard translation that preserves the tone and style of the original text.
-    -   `$p`: **Translate & Polish**, making the translation more fluent and idiomatic.
-    -   `$r`: **Translate & Provide Phonetics**, returning the International Phonetic Alphabet (IPA) for the translated text.
-    -   `$cf` / `$cm`: **Provide Stylized Colloquial Translations**, offering options for feminine or masculine tones.
--   **Highly Configurable**: Supports custom model names to accommodate various models from different providers.
--   **Internationalization (i18n)**: The plugin's UI, help text, and error messages support both Chinese and English.
--   **Built-in Help**: Simply type `?` to get help information for all available commands.
+- **Multi-Provider Support**: Easily switch between various LLM providers like DeepSeek, SiliconFlow, etc.
+- **Flexible Translation Strategies**: Achieve more than just translation with simple prefix commands.
+  - `Default`: High-quality regular translation.
+  - `>t`: Standard translation that preserves the tone and style of the original text.
+  - `$p`: **Translate & Polish**, making the translation more fluent and idiomatic.
+  - `$r` / `$r>` / `$r<` / `$r<>`: **Multiple IPA modes** for source text, translated text, or both.
+  - `$cf` / `$cm`: **Provide Stylized Colloquial Translations**, offering options for feminine or masculine tones.
+  - `$q`: **LLM Q&A Mode:** Convenient short queries to LLM without chat history
+- **Highly Configurable**: Supports custom model names to accommodate various models from different providers.
+- **Internationalization (i18n)**: The plugin's UI, help text, and error messages support both Chinese and English.
+- **Built-in Help**: Simply type `?` to get help information for all available commands.
 
 ## 🚀 Installation
 
@@ -68,23 +69,32 @@ _(Note: The `$p` strategy only returns the polished version.)_
 
 ---
 
-#### 3. Translate & Provide Phonetics (`$r`)
+#### 3. Phonetics Modes (`$r` / `$r>` / `$r<` / `$r<>`)
 
-Use the `$r ` prefix, and the plugin will return the translation and its corresponding International Phonetic Alphabet (IPA).
+- `$r`: Return only the IPA for the source text (no translation).
+- `$r>`: Translate and return the IPA for the translated text.
+- `$r<`: Translate and return the IPA for the source text.
+- `$r<>`: Translate and return IPAs for both the source and translated text.
 
 **Input:**
 
 ```
-$r Hello
+$r<> Hello
 ```
 
 **Output:**
 
 ```
 Translation:
+你好
+
+Translated IPA:
+nǐ xàu
+
+Source Text:
 Hello
 
-IPA:
+Source IPA:
 həˈloʊ
 ```
 

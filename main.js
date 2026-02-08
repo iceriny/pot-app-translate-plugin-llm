@@ -7,7 +7,10 @@ const I18n = {
 - 默认: 直接输入文本进行翻译。
 - >t [文本]: 执行标准翻译, 也是默认策略。
 - $p [文本]: 翻译并润色，返回更优美的结果。
-- $r [文本]: 翻译并提供国际音标 (IPA)。
+- $r [文本]: 不翻译，仅返回原文的音标 (IPA)。
+- $r> [文本]: 翻译并返回译文的音标 (IPA)。
+- $r< [文本]: 翻译并返回原文的音标 (IPA)。
+- $r<> [文本]: 翻译并返回原文与译文的音标 (IPA)。
 - $cf [文本]: 提供女性化的口语翻译。
 - $cm [文本]: 提供男性化的口语翻译。
 - $q [问题]: 这将作为LLM的普通的普通的问答形式, 而非翻译。
@@ -17,6 +20,9 @@ const I18n = {
         colloquial_expression: "口语化表达",
         translation: "翻译",
         ipa: "音标 (IPA)",
+        source_text: "原文",
+        source_ipa: "原文音标 (IPA)",
+        target_ipa: "译文音标 (IPA)",
         api_response_format_error: "API响应格式异常",
         json_parse_error: "JSON解析失败，返回原始内容",
         translate_text_empty: "翻译文本不能为空",
@@ -33,15 +39,22 @@ const I18n = {
 - Default: Enter text directly to translate.
 - >t [text]: Perform standard translation.
 - $p [text]: Translate and polish for a more elegant result.
-- $r [text]: Translate and provide International Phonetic Alphabet (IPA).
+- $r [text]: Return only the IPA for the original text (no translation).
+- $r> [text]: Translate and return the IPA for the translated text.
+- $r< [text]: Translate and return the IPA for the original text.
+- $r<> [text]: Translate and return IPAs for both the original and translated text.
 - $cf [text]: Provide a colloquial, feminine-style translation.
 - $cm [text]: Provide a colloquial, masculine-style translation.
+- $q [question]: This will be a regular question for the LLM, not a translation.
 - ?: Display this help message.`,
         polished_version_not_found: "Polished version not found.",
         standard_translation: "Standard Translation",
         colloquial_expression: "Colloquial Expression",
         translation: "Translation",
         ipa: "IPA",
+        source_text: "Source Text",
+        source_ipa: "Source IPA",
+        target_ipa: "Translated IPA",
         api_response_format_error: "API response format error",
         json_parse_error: "JSON parsing failed, returning original content",
         translate_text_empty: "Translate text cannot be empty",
@@ -93,13 +106,23 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
         responseType: "json",
       },
 
-      // $r: 翻译并提供音标
+      // $r 系列: 音标策略
       $r: {
-        prompt: `You are a linguist and translator. Your task is to translate the text and provide the International Phonetic Alphabet (IPA) transcription for the **translated text**. Respond with a single, valid JSON object.
-1.  **literal**: The translated text.
-2.  **free**: The IPA transcription for the translated text. For languages with dialect variations, use a standard, widely-understood form (e.g., General American for US English).
-
-Your response MUST be in the format: \`{"literal": "...", "free": "..."}\`. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        prompt: `You are a professional linguist. Provide the International Phonetic Alphabet (IPA) transcription for the text exactly as written. Do NOT translate, summarize, or paraphrase the content. Respond with a single, valid JSON object using the format: {"original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown outside this JSON object.`,
+        responseType: "json",
+        buildUserPrompt: (content) =>
+          `Provide only the IPA transcription for the following text without translating or paraphrasing it:\n${content}`,
+      },
+      "$r>": {
+        prompt: `You are a linguist and translator. Translate the text first, then provide the International Phonetic Alphabet (IPA) transcription for the translated text. Respond with a single, valid JSON object using the format: {"translation": "...", "translationIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        responseType: "json",
+      },
+      "$r<": {
+        prompt: `You are a linguist and translator. Translate the text, but provide the International Phonetic Alphabet (IPA) transcription for the original text. Respond with a single, valid JSON object using the format: {"translation": "...", "original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
+        responseType: "json",
+      },
+      "$r<>": {
+        prompt: `You are a linguist and translator. Translate the text and provide IPA transcriptions for both the original text and the translated text. Respond with a single, valid JSON object using the format: {"translation": "...", "translationIPA": "...", "original": "...", "originalIPA": "..."}. Do not include any text, explanation, or markdown formatting outside this JSON object.`,
         responseType: "json",
       },
 
@@ -151,7 +174,7 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
    * @returns {{strategyKey: string, content: string}}
    */
   _parseInput(text) {
-    const match = text.match(/^([>$]\w+)\s/);
+    const match = text.match(/^([>$][^\s]+)\s/);
     if (match && this.strategies[match[1]]) {
       return {
         strategyKey: match[1],
@@ -176,7 +199,11 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
 
     const systemPrompt =
       typeof strategy === "string" ? strategy : strategy.prompt;
-    const userPrompt = `Translate into ${toLang}:\n${content}`;
+    const userPrompt =
+      typeof strategy === "object" &&
+      typeof strategy.buildUserPrompt === "function"
+        ? strategy.buildUserPrompt(content, toLang)
+        : `Translate into ${toLang}:\n${content}`;
 
     return [
       { role: "system", content: systemPrompt },
@@ -218,9 +245,14 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
               jsonResponse.free
             }`;
           case "$r":
-            return `${this.i18n.get("translation")}:\n${
-              jsonResponse.literal
-            }\n\n${this.i18n.get("ipa")}:\n${jsonResponse.free}`;
+          case "$r>":
+          case "$r<":
+          case "$r<>":
+            return this._formatPhoneticsResponse(
+              strategyKey,
+              jsonResponse,
+              messageContent
+            );
           default:
             return jsonResponse.translation || messageContent;
         }
@@ -231,6 +263,68 @@ Your response MUST be a single, valid JSON object in the format: \`{"literal": "
     }
 
     return messageContent;
+  }
+
+  _formatPhoneticsResponse(strategyKey, payload, fallback) {
+    const safe = (value) =>
+      value === undefined || value === null ? "" : `${value}`;
+    const sections = [];
+
+    switch (strategyKey) {
+      case "$r":
+        if (payload.original) {
+          sections.push(
+            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
+          );
+        }
+        sections.push(
+          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+        );
+        break;
+      case "$r>":
+        sections.push(
+          `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
+        );
+        sections.push(
+          `${this.i18n.get("target_ipa")}:\n${safe(payload.translationIPA)}`
+        );
+        break;
+      case "$r<":
+        sections.push(
+          `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
+        );
+        if (payload.original) {
+          sections.push(
+            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
+          );
+        }
+        sections.push(
+          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+        );
+        break;
+      case "$r<>":
+        sections.push(
+          `${this.i18n.get("translation")}:\n${safe(payload.translation)}`
+        );
+        sections.push(
+          `${this.i18n.get("target_ipa")}:\n${safe(payload.translationIPA)}`
+        );
+        if (payload.original) {
+          sections.push(
+            `${this.i18n.get("source_text")}:\n${safe(payload.original)}`
+          );
+        }
+        sections.push(
+          `${this.i18n.get("source_ipa")}:\n${safe(payload.originalIPA)}`
+        );
+        break;
+      default:
+        return fallback;
+    }
+
+    return sections
+      .filter((section) => section && section.trim().length)
+      .join("\n\n");
   }
 
   /**
