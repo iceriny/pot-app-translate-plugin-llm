@@ -1,8 +1,3 @@
-// ==========================================
-// 1. 内存极简优化：将所有字典和类转化为纯函数与 Switch 跳转
-// 原理：避免每次 eval 重新分配庞大对象内存，避免垃圾回收(GC)卡顿
-// ==========================================
-
 function getI18n(lang, key, ...args) {
   const isEn = lang === "en";
   let t = "";
@@ -275,7 +270,7 @@ function buildStrategy(strategyKey, fromLang, toLang) {
 }
 
 // ==========================================
-// 2. 利用宿主原生 History 数据库作为"只读缓存"
+// 利用宿主原生 History 数据库作为"只读缓存"
 // ==========================================
 async function getHostHistoryCache(utils, text, targetLang) {
   if (!utils.Database) return null;
@@ -299,7 +294,7 @@ async function getHostHistoryCache(utils, text, targetLang) {
 }
 
 // ==========================================
-// 3. 核心执行入口 (剥离 Class 包装)
+// 核心执行入口 (剥离 Class 包装)
 // ==========================================
 async function translate(text, from, to, options) {
   const { config, utils } = options;
