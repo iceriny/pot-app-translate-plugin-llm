@@ -2,6 +2,7 @@
   "id": "plugin.com.iceriny.llm",
   "plugin_type": "translate",
   "icon": "icon.svg",
+  "version": "3.0.0",
   "display": "AI翻译",
   "homepage": "https://github.com/iceriny/pot-app-translate-plugin-llm",
   "needs": [

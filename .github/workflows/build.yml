@@ -1,34 +1,74 @@
-name: Build
-on: push
-permissions: write-all
+name: Build & Release Pot Plugin
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 1
-      - name: Install zip
-        run: sudo apt-get install -y jq
-      - id: getname
+          python-version: "3.x"
+
+      - name: Install jq
         run: |
-          echo "NAME=$(cat info.json | jq '.id' | tr -d '"')" >> "$GITHUB_ENV"
-          echo "ICON=$(cat info.json | jq '.icon' | tr -d '"')" >> "$GITHUB_ENV"
-      - uses: vimtor/action-zip@v1
-        with:
-          files: info.json ${{ env.ICON }} main.js
-          dest: ${{ env.NAME }}.potext
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.NAME }}.potext
-          path: "*.potext"
-          if-no-files-found: error
-      - name: Upload Release
-        if: startsWith(github.ref, 'refs/tags')
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Verify required files
+        run: |
+          test -f main.js || (echo "main.js missing" && exit 1)
+          test -f info.json || (echo "info.json missing" && exit 1)
+
+      - name: Verify version matches tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          VERSION=$(jq -r '.version' info.json)
+
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Version mismatch:"
+            echo "Tag: $TAG"
+            echo "info.json: $VERSION"
+            exit 1
+          fi
+
+      - name: Run pack script
+        run: |
+          python pack.py
+
+      - name: Generate checksum
+        run: |
+          cd dist
+          sha256sum *.potext > sha256.txt
+
+      - name: Get plugin id
+        id: plugin
+        run: |
+          PLUGIN_ID=$(jq -r '.id' info.json)
+          VERSION=$(jq -r '.version' info.json)
+
+          echo "plugin_id=$PLUGIN_ID" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: "*.potext"
+          name: ${{ steps.plugin.outputs.plugin_id }} v${{ steps.plugin.outputs.version }}
+          tag_name: v${{ steps.plugin.outputs.version }}
+          files: |
+            dist/*.potext
+            dist/sha256.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
