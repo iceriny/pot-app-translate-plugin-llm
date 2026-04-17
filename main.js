@@ -293,11 +293,51 @@ async function getHostHistoryCache(utils, text, targetLang) {
   return null;
 }
 
+function isReadableStream(stream) {
+  return stream && typeof stream.getReader === "function";
+}
+
+async function readResponseText(res, onChunk) {
+  if (isReadableStream(res.body)) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+      if (typeof onChunk === "function") onChunk(text);
+    }
+    text += decoder.decode();
+    if (typeof onChunk === "function") onChunk(text);
+    return text.trim();
+  }
+
+  if (typeof res.text === "function") {
+    const text = await res.text();
+    if (typeof onChunk === "function") onChunk(text);
+    return text.trim();
+  }
+
+  if (typeof res.data === "string") {
+    if (typeof onChunk === "function") onChunk(res.data);
+    return res.data.trim();
+  }
+
+  if (res.data?.choices?.[0]?.message?.content) {
+    const text = res.data.choices[0].message.content;
+    if (typeof onChunk === "function") onChunk(text);
+    return text.trim();
+  }
+
+  return "";
+}
+
 // ==========================================
 // 核心执行入口 (剥离 Class 包装)
 // ==========================================
 async function translate(text, from, to, options) {
-  const { config, utils } = options;
+  const { config, utils, setResult } = options;
   const lang = config.lang || "zh_cn";
 
   try {
@@ -346,6 +386,7 @@ async function translate(text, from, to, options) {
       temperature: 0.1,
       top_p: 0.99,
       max_tokens: 4000,
+      enable_thinking: false,
       ...(strategy.responseType === "json" && {
         response_format: { type: "json_object" },
       }),
@@ -370,15 +411,22 @@ async function translate(text, from, to, options) {
       body: reqBody,
     });
 
-    if (!res.ok)
+    if (typeof res.ok === "boolean" && !res.ok)
       throw new Error(
         getI18n(lang, "http_error", res.status, JSON.stringify(res.data)),
       );
-    if (!res.data.choices?.[0]?.message)
+
+    const messageContent = await readResponseText(res, (partial) => {
+      if (typeof setResult === "function") {
+        setResult(partial);
+      }
+    });
+
+    if (!messageContent) {
       throw new Error(getI18n(lang, "api_response_format_error"));
+    }
 
     // 5. 格式化结果
-    const messageContent = res.data.choices[0].message.content.trim();
     let finalResult = messageContent;
 
     if (strategy.responseType === "json") {
@@ -431,6 +479,10 @@ async function translate(text, from, to, options) {
         console.warn(getI18n(lang, "json_parse_error"), e.message);
         finalResult = messageContent.replace(/^"|"$/g, "");
       }
+    }
+
+    if (typeof setResult === "function") {
+      setResult(finalResult);
     }
 
     // ★ 注意：这里无需执行 setCache。
