@@ -18,6 +18,8 @@
 - **国际化**：插件界面、帮助文本和错误信息均支持中英双语。
 - **内置帮助**：输入 `?` 即可获取所有可用指令的帮助信息。
 
+- **流式输出**: 翻译内容支持流式输出(beta).
+
 ## 🚀 安装
 
 1. 前往 [Releases](https://github.com/iceriny/pot-app-translate-plugin-llm/releases) 页面。
