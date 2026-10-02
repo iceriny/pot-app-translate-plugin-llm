@@ -19,3 +19,14 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# JavaScript dependencies and local secrets (never packaged)
+node_modules/
+.env
+.env.*
+
+# Plugin build outputs
+*.mplugin
+*.potext
+coverage/
+build/

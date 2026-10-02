@@ -1,0 +1,22 @@
+{
+  "name": "manggo-translate-plugin-llm",
+  "version": "4.0.0-beta.1",
+  "private": true,
+  "type": "module",
+  "description": "Manggo LLM translation plugin",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "npm run build && node --test && python3 -m unittest discover -s tests -p \"package_*.py\"",
+    "test:package": "python3 -m unittest discover -s tests -p \"package_*.py\"",
+    "package": "npm run build && python3 pack.py",
+    "verify-package": "python3 pack.py --verify",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

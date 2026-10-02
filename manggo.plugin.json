@@ -1,0 +1,354 @@
+{
+  "manifestVersion": 1,
+  "id": "com.iceriny.llm",
+  "name": "AI 翻译与词典",
+  "version": "4.0.0-beta.1",
+  "description": "Manggo 原生 LLM 翻译、润色、发音、问答与结构化词典",
+  "author": "iceriny",
+  "homepage": "https://github.com/iceriny/pot-app-translate-plugin-llm/tree/manggo",
+  "icon": "icon.svg",
+  "permissions": [
+    "network"
+  ],
+  "runtime": {
+    "kind": "bun",
+    "api": "manggo.plugin.v1",
+    "main": "main.js"
+  },
+  "services": [
+    {
+      "id": "translation",
+      "kind": "translation",
+      "displayName": "AI 翻译 · LLM",
+      "entry": "translate",
+      "resultType": "text",
+      "language": {
+        "auto": "auto",
+        "zh_CN": "zh_CN",
+        "zh_TW": "zh_TW",
+        "en_US": "en_US",
+        "ja_JP": "ja_JP",
+        "ko_KR": "ko_KR",
+        "fr_FR": "fr_FR",
+        "es_ES": "es_ES",
+        "ru_RU": "ru_RU",
+        "de_DE": "de_DE",
+        "it_IT": "it_IT",
+        "tr_TR": "tr_TR",
+        "pt_PT": "pt_PT",
+        "pt_BR": "pt_BR",
+        "vi_VN": "vi_VN",
+        "id_ID": "id_ID",
+        "th_TH": "th_TH",
+        "ms_MY": "ms_MY",
+        "ar_SA": "ar_SA",
+        "hi_IN": "hi_IN",
+        "mn_Cy": "mn_Cy",
+        "mn_Mo": "mn_Mo",
+        "km_KH": "km_KH",
+        "nb_NO": "nb_NO",
+        "nn_NO": "nn_NO",
+        "fa_IR": "fa_IR",
+        "uk_UA": "uk_UA"
+      },
+      "config": [
+        {
+          "key": "provider",
+          "label": "服务商 / Provider",
+          "control": "select",
+          "default": "deepseek",
+          "options": [
+            {
+              "label": "DeepSeek",
+              "value": "deepseek"
+            },
+            {
+              "label": "SiliconFlow",
+              "value": "siliconflow"
+            },
+            {
+              "label": "OpenAI",
+              "value": "openai"
+            },
+            {
+              "label": "Ollama（本机）",
+              "value": "ollama"
+            },
+            {
+              "label": "自定义 OpenAI 兼容",
+              "value": "custom"
+            }
+          ]
+        },
+        {
+          "key": "apiKey",
+          "label": "API 密钥 / API key",
+          "control": "password",
+          "secret": true,
+          "description": "本机 Ollama 可留空。仅发送到你配置的 API 地址。"
+        },
+        {
+          "key": "model",
+          "label": "模型 / Model",
+          "control": "select",
+          "editable": true,
+          "default": "",
+          "description": "留空使用服务商默认模型；自定义/Ollama 必填，可输入任意模型 ID。",
+          "options": [
+            {
+              "label": "自动（服务商默认）",
+              "value": ""
+            },
+            {
+              "label": "DeepSeek Chat",
+              "value": "deepseek-chat"
+            },
+            {
+              "label": "SiliconFlow DeepSeek V3.1",
+              "value": "deepseek-ai/DeepSeek-V3.1"
+            },
+            {
+              "label": "OpenAI GPT-4.1 mini",
+              "value": "gpt-4.1-mini"
+            }
+          ]
+        },
+        {
+          "key": "endpoint",
+          "label": "API 地址 / API URL",
+          "control": "text",
+          "description": "留空用预设。自定义可填 https://host/v1 或完整 /chat/completions 地址；HTTP 仅允许 localhost。"
+        },
+        {
+          "key": "stream",
+          "label": "流式输出 / Streaming",
+          "control": "boolean",
+          "default": true,
+          "description": "普通翻译/问答逐字显示；结构化指令与词典完成后一次显示。"
+        },
+        {
+          "key": "maxTokens",
+          "label": "最大输出 tokens / Max output tokens",
+          "control": "integer",
+          "default": 4000,
+          "description": "1–131072；须在所选模型限制内。"
+        },
+        {
+          "key": "timeoutSeconds",
+          "label": "超时（秒）/ Timeout seconds",
+          "control": "integer",
+          "default": 60,
+          "description": "5–300，超时中止本次请求，不自动重复扣费。"
+        },
+        {
+          "key": "temperature",
+          "label": "随机度 / Temperature",
+          "control": "decimal",
+          "description": "可留空，使用模型默认值；0–2，部分推理模型不支持。"
+        },
+        {
+          "key": "jsonMode",
+          "label": "强制 JSON 模式 / JSON mode",
+          "control": "boolean",
+          "default": false,
+          "description": "仅结构化指令/词典使用 response_format。服务商不支持时保持关闭。"
+        },
+        {
+          "key": "instructions",
+          "label": "补充要求 / Extra instructions",
+          "control": "textarea",
+          "description": "例如：保留专业缩写，使用简洁商务文风。"
+        },
+        {
+          "key": "glossary",
+          "label": "术语表 / Glossary",
+          "control": "textarea",
+          "description": "每行 source = preferred translation；翻译时统一术语，不应用于问答。"
+        },
+        {
+          "key": "lang",
+          "label": "提示语言 / Help language",
+          "control": "select",
+          "default": "zh_cn",
+          "options": [
+            {
+              "label": "中文",
+              "value": "zh_cn"
+            },
+            {
+              "label": "English",
+              "value": "en"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dictionary",
+      "kind": "translation",
+      "displayName": "AI 词典 · LLM",
+      "entry": "dictionary",
+      "resultType": "dictionary",
+      "language": {
+        "auto": "auto",
+        "zh_CN": "zh_CN",
+        "zh_TW": "zh_TW",
+        "en_US": "en_US",
+        "ja_JP": "ja_JP",
+        "ko_KR": "ko_KR",
+        "fr_FR": "fr_FR",
+        "es_ES": "es_ES",
+        "ru_RU": "ru_RU",
+        "de_DE": "de_DE",
+        "it_IT": "it_IT",
+        "tr_TR": "tr_TR",
+        "pt_PT": "pt_PT",
+        "pt_BR": "pt_BR",
+        "vi_VN": "vi_VN",
+        "id_ID": "id_ID",
+        "th_TH": "th_TH",
+        "ms_MY": "ms_MY",
+        "ar_SA": "ar_SA",
+        "hi_IN": "hi_IN",
+        "mn_Cy": "mn_Cy",
+        "mn_Mo": "mn_Mo",
+        "km_KH": "km_KH",
+        "nb_NO": "nb_NO",
+        "nn_NO": "nn_NO",
+        "fa_IR": "fa_IR",
+        "uk_UA": "uk_UA"
+      },
+      "config": [
+        {
+          "key": "provider",
+          "label": "服务商 / Provider",
+          "control": "select",
+          "default": "deepseek",
+          "options": [
+            {
+              "label": "DeepSeek",
+              "value": "deepseek"
+            },
+            {
+              "label": "SiliconFlow",
+              "value": "siliconflow"
+            },
+            {
+              "label": "OpenAI",
+              "value": "openai"
+            },
+            {
+              "label": "Ollama（本机）",
+              "value": "ollama"
+            },
+            {
+              "label": "自定义 OpenAI 兼容",
+              "value": "custom"
+            }
+          ]
+        },
+        {
+          "key": "apiKey",
+          "label": "API 密钥 / API key",
+          "control": "password",
+          "secret": true,
+          "description": "本机 Ollama 可留空。仅发送到你配置的 API 地址。"
+        },
+        {
+          "key": "model",
+          "label": "模型 / Model",
+          "control": "select",
+          "editable": true,
+          "default": "",
+          "description": "留空使用服务商默认模型；自定义/Ollama 必填，可输入任意模型 ID。",
+          "options": [
+            {
+              "label": "自动（服务商默认）",
+              "value": ""
+            },
+            {
+              "label": "DeepSeek Chat",
+              "value": "deepseek-chat"
+            },
+            {
+              "label": "SiliconFlow DeepSeek V3.1",
+              "value": "deepseek-ai/DeepSeek-V3.1"
+            },
+            {
+              "label": "OpenAI GPT-4.1 mini",
+              "value": "gpt-4.1-mini"
+            }
+          ]
+        },
+        {
+          "key": "endpoint",
+          "label": "API 地址 / API URL",
+          "control": "text",
+          "description": "留空用预设。自定义可填 https://host/v1 或完整 /chat/completions 地址；HTTP 仅允许 localhost。"
+        },
+        {
+          "key": "stream",
+          "label": "流式输出 / Streaming",
+          "control": "boolean",
+          "default": true,
+          "description": "普通翻译/问答逐字显示；结构化指令与词典完成后一次显示。"
+        },
+        {
+          "key": "maxTokens",
+          "label": "最大输出 tokens / Max output tokens",
+          "control": "integer",
+          "default": 4000,
+          "description": "1–131072；须在所选模型限制内。"
+        },
+        {
+          "key": "timeoutSeconds",
+          "label": "超时（秒）/ Timeout seconds",
+          "control": "integer",
+          "default": 60,
+          "description": "5–300，超时中止本次请求，不自动重复扣费。"
+        },
+        {
+          "key": "temperature",
+          "label": "随机度 / Temperature",
+          "control": "decimal",
+          "description": "可留空，使用模型默认值；0–2，部分推理模型不支持。"
+        },
+        {
+          "key": "jsonMode",
+          "label": "强制 JSON 模式 / JSON mode",
+          "control": "boolean",
+          "default": false,
+          "description": "仅结构化指令/词典使用 response_format。服务商不支持时保持关闭。"
+        },
+        {
+          "key": "instructions",
+          "label": "补充要求 / Extra instructions",
+          "control": "textarea",
+          "description": "例如：保留专业缩写，使用简洁商务文风。"
+        },
+        {
+          "key": "glossary",
+          "label": "术语表 / Glossary",
+          "control": "textarea",
+          "description": "每行 source = preferred translation；翻译时统一术语，不应用于问答。"
+        },
+        {
+          "key": "lang",
+          "label": "提示语言 / Help language",
+          "control": "select",
+          "default": "zh_cn",
+          "options": [
+            {
+              "label": "中文",
+              "value": "zh_cn"
+            },
+            {
+              "label": "English",
+              "value": "en"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
