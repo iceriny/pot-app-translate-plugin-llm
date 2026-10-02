@@ -2,7 +2,7 @@
 
 English | [中文](./README.md)
 
-Native migration of the Pot LLM plugin. Version **4.0.0-beta.1** is a maintainer-authorized prerelease of the test build. Actual host installation and real-provider acceptance remain pending.
+Native migration of the Pot LLM plugin. Version **4.0.0-beta.2** is a test build restoring feminine/masculine colloquial styles. No new public release is authorized yet. Actual host installation and real-provider acceptance remain pending.
 
 - Development: [`manggo`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/manggo)
 - Archived Pot implementation: [`main`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/main), unchanged at `04e2df4ee0661fd0085d5adc0339f068905b70cb`
@@ -11,9 +11,9 @@ Native migration of the Pot LLM plugin. Version **4.0.0-beta.1** is a maintainer
 
 ## Install
 
-Install `com.iceriny.llm-4.0.0-beta.1.mplugin` in Manggo Plugin Management without extracting it. Then add **AI 翻译 · LLM** in Translation Services and configure a provider, API key and model. Add **AI 词典 · LLM** separately for native dictionary cards; its settings are independent. `?` displays offline help.
+Install `com.iceriny.llm-4.0.0-beta.2.mplugin` in Manggo Plugin Management without extracting it. Then add **AI 翻译 · LLM** in Translation Services and configure a provider, API key and model. Add **AI 词典 · LLM** separately for native dictionary cards; its settings are independent. `?` displays offline help.
 
-Pot settings/history are not accessed or imported. Re-enter credentials in Manggo. The new plugin ID can coexist with the old plugin. The maintainer has authorized this GitHub beta prerelease; it is not a stable release and has not been submitted to a store.
+Pot settings/history are not accessed or imported. Re-enter credentials in Manggo. The new plugin ID can coexist with the old plugin. The published beta.1 remains unchanged. Beta.2 is delivered for testing and requires separate approval before a public release.
 
 ## Features and settings
 
@@ -40,8 +40,8 @@ Provider/model presets are editable starting points, not a promise of current ac
 | --- | --- |
 | Plain text / `$t text` / `>t text` | Translation preserving formatting |
 | `$p text` | Literal + polished translation |
-| `$f text` / `$cf text` | Neutral + warm colloquial |
-| `$m text` / `$cm text` | Neutral + concise colloquial |
+| `$f text` / `$cf text` | Neutral + feminine colloquial, with restrained but perceptible cute phrasing and natural particles |
+| `$m text` / `$cm text` | Neutral + masculine colloquial, concise, direct and crisp |
 | `$r text` | Source pronunciation only |
 | `$r> text` | Translation + target pronunciation |
 | `$r< text` | Translation + source pronunciation |
@@ -49,7 +49,13 @@ Provider/model presets are editable starting points, not a promise of current ac
 | `$q question` | Single-turn Q&A; no stored conversation |
 | `?` / `$help` | Offline help |
 
-Only `$r>`, `$r<`, `$r<>` allow text without a separating space. Unknown prefixes are preserved. Legacy style aliases remain, described as writing styles without assuming speaker gender.
+Only `$r>`, `$r<`, `$r<>` allow text without a separating space. Unknown prefixes are preserved. Both legacy aliases remain: $f/$cf choose a feminine writing style and $m/$cm a masculine writing style. This is a requested expression style, not an inference about the speaker’s real identity.
+
+### Beta.2 style correction
+
+Feminine output should include restrained but recognizable cute phrasing or natural target-language particles when the context fits, without forcing them into every sentence, stacking coy expressions, or adding intimacy absent from the source. Masculine output should be concise, direct and crisp, without unrequested rudeness or aggression. Both retain a neutral translation and a styled version while preserving meaning, facts, negation, uncertainty, commitments and emotional intensity.
+
+Example input: `$cf Thanks, see you tomorrow.` / `$cm Thanks, see you tomorrow.` with Chinese target. **Illustrative expectations, not actual model results**: feminine “谢谢啦，明天见呀。”; masculine “谢了，明天见。”. Tests verify prompts, command routing and result handling, not live model quality.
 
 The separate dictionary service supports words/short phrases (up to 200 characters and 30 whitespace-separated words). It does not parse commands. AI-generated meanings/pronunciation require verification; generated audio URLs are discarded.
 

@@ -91,8 +91,8 @@ for (const [flavor, translate, dictionary] of [['source', sourceTranslate, sourc
   test(`${flavor}: structured commands buffer, validate JSON and format`, async () => {
     for (const [command, response, expected] of [
       ['$p', { literal: 'literal', free: 'polished' }, 'Polished version'],
-      ['$cf', { literal: 'literal', free: 'friendly' }, 'Colloquial version'],
-      ['$cm', { literal: 'literal', free: 'short' }, 'Colloquial version'],
+      ['$cf', { literal: 'literal', free: 'friendly' }, 'Feminine colloquial version'],
+      ['$cm', { literal: 'literal', free: 'short' }, 'Masculine colloquial version'],
       ['$r', { phonetic: 'həˈləʊ' }, 'Source pronunciation'],
       ['$r>', { translation: '你好', phonetic: 'nǐ hǎo' }, 'Target pronunciation'],
       ['$r<', { translation: '你好', phonetic: 'həˈləʊ' }, 'Source pronunciation'],
