@@ -2,7 +2,7 @@
 
 [English](./README.en.md) | 中文
 
-这是原 Pot AI 翻译插件的 **Manggo 原生迁移版**。当前为 `4.0.0-beta.1` 测试包，等待实际安装与 API 测试后再发布。
+这是原 Pot AI 翻译插件的 **Manggo 原生迁移版**。当前为 `4.0.0-beta.1` 预发布版，已获维护者授权发布对应测试包；实际安装与 API 验收仍待完成。
 
 - 新开发分支：[`manggo`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/manggo)
 - Pot 旧版留档：[`main`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/main)，原提交 `04e2df4ee0661fd0085d5adc0339f068905b70cb`，不删除、不改写历史
@@ -18,7 +18,7 @@
 4. 如需词典卡片，另外添加 **AI 词典 · LLM** 并配置。两个服务的设置独立
 5. 输入 `?` 可离线查看指令帮助；随后按 [测试清单](./TESTING.md) 验证
 
-旧 Pot 的配置和历史不会被读取或自动搬运，密钥请在 Manggo 服务配置中重新填写。两个插件 ID 不同，可以并存。测试包不创建 GitHub Release、tag 或商店发布；需维护者确认后另行发布。
+旧 Pot 的配置和历史不会被读取或自动搬运，密钥请在 Manggo 服务配置中重新填写。两个插件 ID 不同，可以并存。维护者已授权在 GitHub 发布此 beta 测试包；它不是稳定版，未进行商店发布。
 
 ## 升级内容
 
@@ -94,7 +94,7 @@ LICENSE
 
 不包含源码模块、node_modules、测试、source map、配置密钥或构建元数据。打包具有固定时间戳和文件顺序；校验构建与源码摘要，防止漏构建。`dist/sha256.txt` 提供包校验和。压缩可减小代码体积，但不承诺未经测量的翻译延迟改善。
 
-CI 只做语法、测试、构建、包校验和上传 Actions 制品，使用只读 contents 权限，没有 Release/tag/npm 发布步骤。源代码和压缩产物运行同一组协议测试；测试使用本地假响应，不调用收费 API。详见 [TESTING.md](./TESTING.md)。
+日常 CI 只做语法、测试、构建、包校验和上传 Actions 制品，使用只读 contents 权限。另有仅限此次已授权 `v4.0.0-beta.1` 的一次性发布流程，固定已交付包 SHA-256，先测试并上传草稿附件后再公开预发布；普通源码推送不会触发发布，也没有 npm/商店发布步骤。源代码和压缩产物运行同一组协议测试；测试使用本地假响应，不调用收费 API。详见 [TESTING.md](./TESTING.md)。
 
 ## API 依据与验证边界
 

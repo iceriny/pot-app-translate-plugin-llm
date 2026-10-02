@@ -1,0 +1,47 @@
+name: Publish approved Manggo beta
+
+# One explicitly approved beta only. Normal code pushes do not publish releases.
+on:
+  push:
+    branches: [manggo]
+    paths: [.github/releases/v4.0.0-beta.1.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-manggo-v4.0.0-beta.1
+  cancel-in-progress: false
+
+jobs:
+  publish-approved-beta:
+    if: github.repository == 'iceriny/pot-app-translate-plugin-llm' && github.ref == 'refs/heads/manggo'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned build dependencies
+        run: npm ci
+      - name: Check and test sources and minified code
+        run: |
+          npm run check
+          npm test
+      - name: Build and verify the approved archive
+        run: |
+          npm run package
+          npm run verify-package
+          python3 scripts/release_beta.py --check-only
+      - name: Publish this beta with verified assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release_beta.py

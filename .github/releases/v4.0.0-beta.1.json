@@ -1,0 +1,9 @@
+{
+  "tag": "v4.0.0-beta.1",
+  "version": "4.0.0-beta.1",
+  "source_commit": "778a6e1a62f8d5f4ff55abdae37c76a713df232f",
+  "archive": "com.iceriny.llm-4.0.0-beta.1.mplugin",
+  "archive_size": 22141,
+  "archive_sha256": "3278ffa6565640d9347c3069ea1c655ef95e38bca497c460c8ff94cef66d202b",
+  "prerelease": true
+}

@@ -2,7 +2,7 @@
 
 English | [中文](./README.md)
 
-Native migration of the Pot LLM plugin. Version **4.0.0-beta.1** is a test build, pending installation and real-provider acceptance before release.
+Native migration of the Pot LLM plugin. Version **4.0.0-beta.1** is a maintainer-authorized prerelease of the test build. Actual host installation and real-provider acceptance remain pending.
 
 - Development: [`manggo`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/manggo)
 - Archived Pot implementation: [`main`](https://github.com/iceriny/pot-app-translate-plugin-llm/tree/main), unchanged at `04e2df4ee0661fd0085d5adc0339f068905b70cb`
@@ -13,7 +13,7 @@ Native migration of the Pot LLM plugin. Version **4.0.0-beta.1** is a test build
 
 Install `com.iceriny.llm-4.0.0-beta.1.mplugin` in Manggo Plugin Management without extracting it. Then add **AI 翻译 · LLM** in Translation Services and configure a provider, API key and model. Add **AI 词典 · LLM** separately for native dictionary cards; its settings are independent. `?` displays offline help.
 
-Pot settings/history are not accessed or imported. Re-enter credentials in Manggo. The new plugin ID can coexist with the old plugin. No release, tag or store publication is performed before user acceptance.
+Pot settings/history are not accessed or imported. Re-enter credentials in Manggo. The new plugin ID can coexist with the old plugin. The maintainer has authorized this GitHub beta prerelease; it is not a stable release and has not been submitted to a store.
 
 ## Features and settings
 
@@ -67,7 +67,7 @@ npm run verify-package
 
 The production archive contains exactly four root files: `manggo.plugin.json`, a **single bundled/minified ESM `main.js`**, `icon.svg`, and `LICENSE`. It excludes source modules, node_modules, tests, sourcemaps, secrets and build metadata. Source remains in this branch. Pinned esbuild, deterministic ZIP metadata and source/build checksums make packaging repeatable; `dist/sha256.txt` records the archive hash. Smaller code does not establish faster provider response times.
 
-CI has read-only contents permission and uploads build artifacts only. It cannot publish a release/tag/npm package. Source and minified code run the same mock protocol tests. See [TESTING.md](./TESTING.md) for acceptance coverage and limits.
+Normal CI has read-only contents permission and uploads build artifacts only. A separate one-time workflow is limited to the explicitly approved `v4.0.0-beta.1`, pins the delivered archive SHA-256, verifies draft assets before publication, and does not publish on ordinary code pushes. No npm/store publishing is configured. Source and minified code run the same mock protocol tests. See [TESTING.md](./TESTING.md) for acceptance coverage and limits.
 
 ## References and verification limits
 
